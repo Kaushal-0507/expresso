@@ -53,8 +53,6 @@ const MessageContainer = ({ selectedChat, setChats }) => {
     }
   }
 
-  console.log(messages);
-
   useEffect(() => {
     fetchMessages();
   }, [selectedChat]);

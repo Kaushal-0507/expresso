@@ -25,7 +25,6 @@ export default function Login() {
   };
 
   const userSignIn = (e, creds) => {
-    console.log(creds);
     e.preventDefault();
     signIn(creds);
   };

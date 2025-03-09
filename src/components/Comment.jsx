@@ -28,7 +28,7 @@ import Picker from "@emoji-mart/react";
 import { faSmile } from "@fortawesome/free-regular-svg-icons";
 import { toast } from "react-toastify";
 
-export default function Comment({ comment, postId, setComments }) {
+export default function Comment({ comment, postId }) {
   const navigate = useNavigate();
   const {
     userData: {
@@ -46,23 +46,13 @@ export default function Comment({ comment, postId, setComments }) {
   const [showActions, setShowActions] = useState(false);
   const [open, setOpen] = useState(false);
 
-  const user = users.find((user) => user.username === username);
+  const user = comment.user
 
   const clickHandler = (e, func) => {
     e.stopPropagation();
     func;
   };
 
-  const handlePostCommentLike = async (serviceFn, postId, commentId, token) => {
-    try {
-      const { data, status } = await serviceFn(postId, commentId, token);
-      if (status === 201) {
-        setComments(data.comments);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const handlePostCommentDelete = async (postId, commentId, token) => {
     try {
@@ -71,13 +61,10 @@ export default function Comment({ comment, postId, setComments }) {
         commentId,
         token
       );
-      if (status === 201) {
-        postsDispatch({
-          type: POSTS.INITIALISE,
-          payload: data.posts.reverse(),
-        });
-      }
-      setComments((prev) => prev.filter(({ _id }) => _id !== commentId));
+      postsDispatch({
+        type: POSTS.INITIALISE,
+        payload: data.posts.reverse(),
+      });
     } catch (error) {
       console.error(error);
     }
@@ -118,21 +105,6 @@ export default function Comment({ comment, postId, setComments }) {
             >
               {user?._id === userDetails?._id ? (
                 <div>
-                  <Modal
-                    className="px-2"
-                    setOpen={setOpen}
-                    open={open}
-                    modalFor={"Edit"}
-                  >
-                    {
-                      <EditComment
-                        postId={postId}
-                        comment={comment}
-                        setComments={setComments}
-                        setOpen={setOpen}
-                      />
-                    }
-                  </Modal>
                   <button
                     className="border-t-[1px] px-2"
                     onClick={() => handlePostCommentDelete(postId, _id, token)}
@@ -142,7 +114,7 @@ export default function Comment({ comment, postId, setComments }) {
                 </div>
               ) : (
                 <div>
-                  {userDetails?.following.find(
+                  {userDetails?.followings.find(
                     ({ username }) => username === user?.username
                   ) ? (
                     <button
@@ -202,7 +174,7 @@ export default function Comment({ comment, postId, setComments }) {
               <p className="line-clamp-1 text-sm">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="line-clamp-1 text-xs">@{username}</p>
+              <p className="line-clamp-1 text-xs">@{user.username}</p>
             </div>
             <p
               className={`${
@@ -213,7 +185,7 @@ export default function Comment({ comment, postId, setComments }) {
             </p>
           </div>
           <div>
-            <p className={`text-sm`}>{content}</p>
+            <p className={`text-sm`}>{comment?.comment}</p>
           </div>
           <div className="flex justify-between text-sm">
             <div

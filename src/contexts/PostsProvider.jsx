@@ -36,7 +36,6 @@ export default function PostsProvider({ children }) {
       const {
         data: { posts },
       } = await getAllPostsService();
-      if (status === 200) {
         postsDispatch({
           type: POSTS.INITIALISE,
           payload: posts.reverse(),
@@ -45,7 +44,6 @@ export default function PostsProvider({ children }) {
           type: POSTS.IS_LOADING,
           payload: false,
         });
-      }
     } catch (error) {
       console.error(error);
     }
@@ -58,7 +56,7 @@ export default function PostsProvider({ children }) {
   const getUserFeed = () => {
     const feedPosts = postsData.posts?.filter(
       (post) =>
-        userDetails?.following?.find(
+        userDetails?.followings?.find(
           ({ username }) => username === post?.username
         ) || post.username === userDetails?.username
     );
@@ -71,13 +69,11 @@ export default function PostsProvider({ children }) {
 
   const handlePostLike = async (serviceFn, postId, token) => {
     try {
-      const { data, status } = await serviceFn(postId, token);
-      if (status === 201) {
-        postsDispatch({
-          type: POSTS.INITIALISE,
-          payload: data.posts.reverse(),
-        });
-      }
+      const { data } = await serviceFn(postId, token);
+      postsDispatch({
+        type: POSTS.INITIALISE,
+        payload: data.posts.reverse(),
+      });
     } catch (error) {
       console.error(error);
     }
@@ -86,9 +82,7 @@ export default function PostsProvider({ children }) {
   const handlePostBookmark = async (serviceFn, postId, token) => {
     try {
       const { data, status } = await serviceFn(postId, token);
-      if (status === 200) {
-        authDispatch({ type: AUTH.SET_BOOKMARKS, payload: data.bookmarks });
-      }
+      authDispatch({ type: AUTH.SET_BOOKMARKS, payload: data.bookmarks });
     } catch (error) {
       console.error(error);
     }
@@ -96,13 +90,11 @@ export default function PostsProvider({ children }) {
 
   const handlePostDelete = async (postId, token) => {
     try {
-      const { data, status } = await deletePostService(postId, token);
-      if (status === 201) {
+      const { data } = await deletePostService(postId, token);
         postsDispatch({
           type: POSTS.INITIALISE,
           payload: data.posts.reverse(),
         });
-      }
     } catch (error) {
       console.error(error);
     }
@@ -111,10 +103,9 @@ export default function PostsProvider({ children }) {
   const followUnfollowHandler = async (serviceFn, id, token) => {
     try {
       const { data, status } = await serviceFn(id, token);
-      if (status === 200) {
-        authDispatch({ type: AUTH.USER_FOLLOW, payload: data.user });
-        // setUserProfile(data.followUser);
-      }
+
+      authDispatch({ type: AUTH.USER_FOLLOW, payload: data.user });
+      // setUserProfile(data.followUser);
     } catch (error) {
       console.error(error);
     }
@@ -124,7 +115,6 @@ export default function PostsProvider({ children }) {
     const toastId = toast.loading("Adding comment...");
     try {
       const { data, status } = await addPostCommentService(id, input, token);
-      if (status === 201) {
         postsDispatch({
           type: POSTS.INITIALISE,
           payload: data.posts.reverse(),
@@ -135,7 +125,6 @@ export default function PostsProvider({ children }) {
           isLoading: false,
           autoClose: 2000,
         });
-      }
       // setCommentInput("");
       // setShowCommentInput(false);
     } catch (error) {

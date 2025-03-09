@@ -58,7 +58,7 @@ export default function Sidebar({ showMenu, setShowMenu }) {
             @{userDetails?.username}
           </p>
           <p className="text-xs">
-            {userDetails?.following?.length} Following{" "}
+            {userDetails?.followings?.length} Following{" "}
             {userDetails?.followers?.length} Followers
           </p>
         </section>

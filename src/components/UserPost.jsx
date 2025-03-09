@@ -34,7 +34,7 @@ import ImgModal from "./ImgModal";
 import { componentDecorator } from "../common/componentDecorator";
 
 export default function UserPost({ userPost, isSinglePage }) {
-  const mediaUrl = userPost?.post.url;
+  const mediaUrl = userPost?.post?.url;
   const navigate = useNavigate();
   const {
     userData: {
@@ -48,12 +48,8 @@ export default function UserPost({ userPost, isSinglePage }) {
     followUnfollowHandler,
     addCommentToPost,
   } = usePosts();
-  const {
-    usersData: { users },
-  } = useUsers();
   const { theme } = useTheme();
   const { _id, content, owner, likes, comments, createdAt } = userPost;
-
   const [commentInput, setCommentInput] = useState("");
   const [flags, setFlags] = useState({
     showLikedBy: false,
@@ -166,7 +162,7 @@ export default function UserPost({ userPost, isSinglePage }) {
                       </div>
                     ) : (
                       <div>
-                        {userDetails?.following.find(
+                        {userDetails?.followings.find(
                           ({ username }) => username === user?.username
                         ) ? (
                           <button
@@ -207,7 +203,7 @@ export default function UserPost({ userPost, isSinglePage }) {
                 )}
               </div>
             </div>
-            <p className="text-xs">@{username}</p>
+            <p className="text-xs">@{owner?.username}</p>
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm tracking-tight">
@@ -298,35 +294,6 @@ export default function UserPost({ userPost, isSinglePage }) {
               theme === "dark" ? "border-white" : "border-mineShaftLight"
             } pt-2`}
           >
-            {likes?.find(({ _id }) => _id === userDetails._id) ? (
-              <div className="flex items-center rounded-md">
-                <Button
-                  className="border-none pl-2"
-                  onClick={(e) =>
-                    clickHandler(
-                      e,
-                      handlePostLike(dislikePostService, _id, token)
-                    )
-                  }
-                >
-                  <FontAwesomeIcon icon={faThumbsUpFilled} />
-                </Button>
-                <p
-                  className="cursor-pointer pr-2"
-                  onClick={(e) =>
-                    clickHandler(
-                      e,
-                      setFlags((prev) => ({
-                        ...prev,
-                        showLikedBy: !prev.showLikedBy,
-                      }))
-                    )
-                  }
-                >
-                  {likes?.likeCount}
-                </p>
-              </div>
-            ) : (
               <div className="flex items-center rounded-md">
                 <Button
                   className="border-none pl-2"
@@ -334,7 +301,7 @@ export default function UserPost({ userPost, isSinglePage }) {
                     clickHandler(e, handlePostLike(likePostService, _id, token))
                   }
                 >
-                  <FontAwesomeIcon icon={faThumbsUp} />
+                  <FontAwesomeIcon icon={likes?.find(( _id ) => _id === userDetails._id) ? faThumbsUpFilled : faThumbsUp} />
                 </Button>
                 <p
                   className="cursor-pointer pr-2"
@@ -348,10 +315,9 @@ export default function UserPost({ userPost, isSinglePage }) {
                     )
                   }
                 >
-                  {likes?.likeCount}
+                  {likes?.length}
                 </p>
               </div>
-            )}
             <div className="flex items-center rounded-md">
               <Button
                 onClick={(e) =>
@@ -370,7 +336,7 @@ export default function UserPost({ userPost, isSinglePage }) {
               <p className="pr-2">{comments?.length}</p>
             </div>
 
-            {userDetails?.bookmarks.find((postId) => postId === _id) ? (
+            {userDetails?.bookmarks?.find((postId) => postId === _id) ? (
               <Button
                 onClick={(e) =>
                   clickHandler(

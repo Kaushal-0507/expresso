@@ -1,4 +1,5 @@
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // /api/comments/:postId
 export const getPostCommentsService = (postId) => {
@@ -8,7 +9,7 @@ export const getPostCommentsService = (postId) => {
 // /api/comments/add/:postId
 export const addPostCommentService = (postId, inputText, token) => {
   return axios.post(
-    `/api/comments/add/${postId}`,
+    `${API_URL}/api/post/comment/${postId}`,
     {
       commentData: {
         content: inputText,
@@ -41,7 +42,7 @@ export const editPostCommentService = (postId, commentId, inputText, token) => {
 
 // /api/comments/delete/:postId/:commentId
 export const deletePostCommentService = (postId, commentId, token) => {
-  return axios.delete(`/api/comments/delete/${postId}/${commentId}`, {
+  return axios.delete(`${API_URL}/api/post/comment/${postId}?commentId=${commentId}`, {
     headers: {
       authorization: `Bearer ${token}`,
     },

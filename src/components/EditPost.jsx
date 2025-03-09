@@ -34,7 +34,7 @@ export default function EditPost({ post, setOpen }) {
           postId,
           token
         );
-        if (status === 201) {
+
           postsDispatch({
             type: POSTS.INITIALISE,
             payload: data.posts.reverse(),
@@ -47,7 +47,6 @@ export default function EditPost({ post, setOpen }) {
             isLoading: false,
             autoClose: 2000,
           });
-        }
       } catch (error) {
         console.error(error);
         toast.update(id, {
@@ -64,7 +63,6 @@ export default function EditPost({ post, setOpen }) {
           postId,
           token
         );
-        if (status === 201) {
           postsDispatch({
             type: POSTS.INITIALISE,
             payload: data.posts.reverse(),
@@ -76,7 +74,6 @@ export default function EditPost({ post, setOpen }) {
             isLoading: false,
             autoClose: 2000,
           });
-        }
       } catch (error) {
         console.error(error);
         toast.update(id, {

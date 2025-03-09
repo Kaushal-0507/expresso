@@ -43,7 +43,6 @@ export function UserProfile() {
   const getUserProfile = async (id) => {
     try {
       const { data, status } = await getSingleUserService(id, token);
-      console.log(data);
       if (status === 200) {
         setUserProfile(data);
         setLoading(false);
@@ -167,14 +166,12 @@ export default function Profile() {
     }
   };
 
-  const getAllUserPosts = async (username) => {
+  const getAllUserPosts = async (userId) => {
     try {
       const {
         data: { posts },
-      } = await getUserPostsService(username);
-      if (status === 200) {
+      } = await getUserPostsService(userId, token);
         setUserPosts(posts);
-      }
     } catch (error) {
       console.error(error);
     }
@@ -184,7 +181,7 @@ export default function Profile() {
     try {
       const { data, status } = await serviceFn(id, token);
       if (status === 200) {
-        authDispatch({ type: AUTH.USER_FOLLOW, payload: data });
+        authDispatch({ type: AUTH.USER_FOLLOW, payload: data.user });
         setUserProfile(data.followUser);
       }
     } catch (error) {
@@ -197,7 +194,7 @@ export default function Profile() {
   }, [userId, userDetails]);
 
   useEffect(() => {
-    getAllUserPosts(userProfile?.username);
+    getAllUserPosts(userProfile?._id);
   }, [userProfile, posts]);
 
   return (
@@ -229,24 +226,7 @@ export default function Profile() {
             >
               {<EditProfile setOpen={setOpen} />}
             </Modal>
-          ) : userDetails?.following?.find(
-              ({ _id }) => _id === userProfile?._id
-            ) ? (
-            <Button
-              onClick={() =>
-                followUnfollowHandler(
-                  unfollowUserService,
-                  userProfile?._id,
-                  token
-                )
-              }
-              className={
-                "self-end rounded-full border border-mineShaftLight px-2 py-1"
-              }
-            >
-              Following
-            </Button>
-          ) : (
+          ) : 
             <Button
               onClick={() =>
                 followUnfollowHandler(
@@ -259,9 +239,11 @@ export default function Profile() {
                 "self-end rounded-full border border-mineShaftLight px-2 py-1"
               }
             >
-              Follow
+              {userDetails?.followings?.find(
+              ( _id ) => _id === userProfile?._id
+            ) ? "Following" : "Follow" }
             </Button>
-          )}
+          }
           <div>
             <p>
               {userProfile?.firstName} {userProfile?.lastName}
@@ -294,7 +276,7 @@ export default function Profile() {
               className="cursor-pointer"
               onClick={() => navigate(`/${userProfile?._id}/following`)}
             >
-              {userProfile?.following?.length}{" "}
+              {userProfile?.followings?.length}{" "}
               <span className="hover:underline">Following</span>
             </p>
             <p
@@ -344,9 +326,9 @@ export function UserFollowing() {
     getUserProfile(userId);
   }, [userId, userDetails]);
 
-  return userProfile?.following?.length ? (
+  return userProfile?.followings?.length ? (
     <section className="flex flex-col gap-2">
-      {userProfile?.following?.map((us) => (
+      {userProfile?.followings?.map((us) => (
         <section
           key={us?._id}
           onClick={() => navigate(`/${us?._id}`)}
@@ -362,37 +344,21 @@ export function UserFollowing() {
               <small>{us?.bio}</small>
             </div>
           </div>
-          {userDetails?.following?.find(({ _id }) => _id === us?._id) ? (
             <Button
-              onClick={() =>
-                followUnfollowHandler(
-                  unfollowUserService,
-                  userProfile?._id,
-                  token
-                )
-              }
-              className={
-                "self-end rounded-full border border-mineShaftLight px-2 py-1"
-              }
-            >
-              Following
-            </Button>
-          ) : (
-            <Button
-              onClick={() =>
+              onClick={(e) => {
+                e.stopPropagation()
                 followUnfollowHandler(
                   followUserService,
-                  userProfile?._id,
+                  us?._id,
                   token
                 )
-              }
+              }}
               className={
                 "self-end rounded-full border border-mineShaftLight px-2 py-1"
               }
             >
-              Follow
+              {userDetails?.followings?.find(( _id ) => _id === us?._id) ? "Following" : "Follow"}
             </Button>
-          )}
         </section>
       ))}
     </section>

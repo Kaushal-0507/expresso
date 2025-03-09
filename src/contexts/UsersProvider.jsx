@@ -17,17 +17,15 @@ const initialUsers = {
 export default function UsersProvider({ children }) {
   const {
     userData: {
-      user: { userDetails, token },
+      user: { token },
     },
   } = useAuth();
   const [usersData, usersDispatch] = useReducer(usersReducers, initialUsers);
 
   const getAllUsers = async () => {
     try {
-      const { data, status } = await getAllUsersService(token);
-      if (status === 200) {
-        usersDispatch({ type: USERS.INITIALISE, payload: data.users });
-      }
+      const { data } = await getAllUsersService(token);
+      usersDispatch({ type: USERS.INITIALISE, payload: data });
     } catch (error) {
       console.error(error);
     }
@@ -35,7 +33,7 @@ export default function UsersProvider({ children }) {
 
   useEffect(() => {
     getAllUsers();
-  }, [userDetails]);
+  }, [token]);
 
   return (
     <UsersContext.Provider value={{ usersData, usersDispatch }}>

@@ -20,7 +20,7 @@ export const getSingleUserService = (userId, token) => {
 // /api/users/edit
 export const editUserDataService = (userData, token) => {
   return axios.post(
-    `${API_URL}/api/users/edit`,
+    `${API_URL}/api/user/edit`,
     { userData },
     {
       headers: {
@@ -42,7 +42,7 @@ export const getUserBookmarksService = (token) => {
 // /api/users/bookmark/:postId
 export const bookmarkPostService = (postId, token) => {
   return axios.post(
-    `${API_URL}/api/users/bookmark/${postId}`,
+    `${API_URL}/api/user/bookmark/${postId}`,
     {},
     {
       headers: {
@@ -54,9 +54,8 @@ export const bookmarkPostService = (postId, token) => {
 
 // /api/users/remove-bookmark/:postId
 export const removeBookmarkPostService = (postId, token) => {
-  return axios.post(
-    `${API_URL}/api/users/remove-bookmark/${postId}`,
-    {},
+  return axios.delete(
+    `${API_URL}/api/user/removebookmark/${postId}`,
     {
       headers: {
         authorization: `Bearer ${token}`,
@@ -68,7 +67,7 @@ export const removeBookmarkPostService = (postId, token) => {
 // /api/users/follow/:followUserId
 export const followUserService = (followUserId, token) => {
   return axios.post(
-    `${API_URL}/api/users/follow/${followUserId}`,
+    `${API_URL}/api/user/follow/${followUserId}`,
     {},
     {
       headers: {
@@ -81,7 +80,7 @@ export const followUserService = (followUserId, token) => {
 // /api/users/unfollow/:followUserId
 export const unfollowUserService = (followUserId, token) => {
   return axios.post(
-    `${API_URL}/api/users/unfollow/${followUserId}`,
+    `${API_URL}/api/user/follow/${followUserId}`,
     {},
     {
       headers: {

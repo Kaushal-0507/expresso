@@ -21,7 +21,7 @@ export default function FollowSuggestions({ isSuggestion }) {
       users
         ?.filter(
           (user) =>
-            !userDetails?.following?.find(({ _id }) => _id === user._id) &&
+            !userDetails?.followings?.find(( _id ) => _id === user._id) &&
             user._id !== userDetails?._id
         )
         .slice(0, 4),

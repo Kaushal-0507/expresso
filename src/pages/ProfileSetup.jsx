@@ -237,7 +237,7 @@ export default function ProfileSetup() {
                 theme === "dark" ? "bg-mineShaftLight" : ""
               } w-full py-1 text-xs uppercase`}
             >
-              {userDetails?.following?.length > 0 ? "Next" : "Skip"}
+              {userDetails?.followings?.length > 0 ? "Next" : "Skip"}
             </Button>
           </div>
         )}

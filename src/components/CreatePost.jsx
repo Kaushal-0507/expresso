@@ -33,11 +33,9 @@ export default function CreatePost({ modal, setOpen }) {
 
   const createUserPost = async (inputText, media, token) => {
     const id = toast.loading("Creating post...");
-    console.log(media);
     if (media) {
       try {
         const response = await uploadMedia(media);
-        console.log(response);
         const { data, status } = await createPostService(
           {
             content: inputText,
@@ -53,7 +51,6 @@ export default function CreatePost({ modal, setOpen }) {
           const {
             data: { posts },
           } = await getAllPostsService();
-          console.log(posts);
           postsDispatch({
             type: POSTS.INITIALISE,
             payload: posts.reverse(), // Use the fetched posts
@@ -84,7 +81,7 @@ export default function CreatePost({ modal, setOpen }) {
         );
         if (status === 201) {
           // Fetch all posts after creating a new one
-          const { data: posts } = await getAllPostsService();
+          const { data: { posts } } = await getAllPostsService();
           postsDispatch({
             type: POSTS.INITIALISE,
             payload: posts.reverse(), // Use the fetched posts

@@ -19,21 +19,19 @@ export default function Post() {
   const [loading, setLoading] = useState(true);
   const { postId } = useParams();
   const {
-    usersData: { users },
-  } = useUsers();
+    userData: {
+      user: { token },
+    },
+  } = useAuth();
   const {
     postsData: { posts },
   } = usePosts();
 
-  // const user = users.find((user) => user.username === post?.username);
-
   const getUserPost = async (postId) => {
     try {
-      const { data, status } = await getSinglePostService(postId);
-      if (status === 200) {
+      const { data, status } = await getSinglePostService(postId, token);
         setPost(data.post);
         setLoading(false);
-      }
     } catch (error) {
       console.error(error);
       setLoading(false);
@@ -47,7 +45,7 @@ export default function Post() {
   return !loading ? (
     <section className="flex flex-col gap-2">
       <UserPost userPost={post} isSinglePage />
-      <Comments postId={postId} />
+      <Comments postId={postId} comments={post.comments} />
     </section>
   ) : (
     <section className="grid h-full w-full place-items-center">
@@ -62,27 +60,27 @@ export default function Post() {
   );
 }
 
-function Comments({ postId }) {
+function Comments({ postId, comments }) {
   const {
     postsData: { posts },
   } = usePosts();
   const { theme } = useTheme();
-  const [comments, setComments] = useState([]);
+  // const [comments, setComments] = useState([]);
 
-  const getPostComments = async (postId) => {
-    try {
-      const { data, status } = await getPostCommentsService(postId);
-      if (status === 200) {
-        setComments(data.comments);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const getPostComments = async (postId) => {
+  //   try {
+  //     const { data, status } = await getPostCommentsService(postId);
+  //     if (status === 200) {
+  //       setComments(data.comments);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
-  useEffect(() => {
-    getPostComments(postId);
-  }, [posts, postId]);
+  // useEffect(() => {
+  //   getPostComments(postId);
+  // }, [posts, postId]);
 
   return (
     <section
@@ -104,7 +102,6 @@ function Comments({ postId }) {
               key={co._id}
               comment={co}
               postId={postId}
-              setComments={setComments}
             />
           ))}
         </section>

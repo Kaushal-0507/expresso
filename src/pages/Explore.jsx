@@ -19,7 +19,6 @@ export default function Explore() {
     );
   }, [posts, userDetails]);
 
-  console.log(explorePosts);
   return (
     <section>
       <section className="flex flex-col gap-2 py-2">
