@@ -1,5 +1,5 @@
 import React from "react";
-import { UserData } from "../../context/UserContext";
+import { UserData } from "../../contexts/UserContext";
 import { BsSendCheck } from "react-icons/bs";
 
 const Chat = ({ chat, setSelectedChat, isOnline }) => {
