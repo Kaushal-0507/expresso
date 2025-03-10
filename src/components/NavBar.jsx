@@ -10,17 +10,36 @@ import { useAuth } from "../contexts/AuthProvider";
 import { faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import Modal from "./Modal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreatePost from "./CreatePost";
 import { useTheme } from "../contexts/ThemeProvider";
+import { getNotificationsService } from "../services/notificationServices";
 
 export default function NavBar() {
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const activeStyle = ({ isActive }) => {
-    return { color: isActive ? "blue" : "black" }; // Example: blue for active, black for inactive
+    return { color: isActive ? "blue" : "black" };
   };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await getNotificationsService();
+        const unread = response.data.filter(n => !n.read).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+    // Set up polling every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <nav
@@ -49,8 +68,13 @@ export default function NavBar() {
       <NavLink style={activeStyle} to="/chat">
         <FontAwesomeIcon icon={faMessage} />
       </NavLink>
-      <NavLink style={activeStyle} to="/notifications">
+      <NavLink style={activeStyle} to="/notifications" className="relative">
         <FontAwesomeIcon icon={faBell} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            {unreadCount}
+          </span>
+        )}
       </NavLink>
       <NavLink style={activeStyle} to="/bookmarks">
         <FontAwesomeIcon icon={faBookmark} />
@@ -73,6 +97,24 @@ export function SideNavBar() {
   };
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await getNotificationsService();
+        const unread = response.data.filter(n => !n.read).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+    // Set up polling every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <nav className="flex h-full w-auto flex-col items-start justify-start gap-4 px-2 pt-4 max-[500px]:items-center">
@@ -111,10 +153,15 @@ export function SideNavBar() {
       <NavLink
         style={activeStyle}
         to="/notifications"
-        className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40 "
+        className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40 relative"
       >
         <FontAwesomeIcon icon={faBell} className="w-[20px]" />
         <p className="max-[768px]:hidden">Notifications</p>
+        {unreadCount > 0 && (
+          <span className="absolute right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            {unreadCount}
+          </span>
+        )}
       </NavLink>
       <NavLink
         style={activeStyle}

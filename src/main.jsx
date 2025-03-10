@@ -7,6 +7,7 @@ import AuthProvider from "./contexts/AuthProvider.jsx";
 import UsersProvider from "./contexts/UsersProvider.jsx";
 import PostsProvider from "./contexts/PostsProvider.jsx";
 import ThemeProvider from "./contexts/ThemeProvider.jsx";
+import { ChatContextProvider } from "./contexts/ChatContext.jsx";
 
 // makeServer();
 
@@ -15,9 +16,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <AuthProvider>
       <UsersProvider>
         <PostsProvider>
-          <ThemeProvider>
-            <App />
-          </ThemeProvider>
+          <ChatContextProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
+          </ChatContextProvider>
         </PostsProvider>
       </UsersProvider>
     </AuthProvider>

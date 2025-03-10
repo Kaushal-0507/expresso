@@ -11,7 +11,7 @@ export const ChatContextProvider = ({ children }) => {
   async function createChat(id) {
     try {
       const { data } = await axios.post("/api/messages", {
-        recieverId: id,
+        receiverId: id,
         message: "hii",
       });
     } catch (error) {

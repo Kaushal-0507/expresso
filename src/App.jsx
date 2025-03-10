@@ -22,6 +22,8 @@ import Post from "./pages/Post";
 import ProfileSetup from "./pages/ProfileSetup";
 import { Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import Notifications from "./pages/Notifications";
+import ChatPage from "./pages/ChatPage";
 
 function AppRouter() {
   const router = createBrowserRouter(
@@ -32,6 +34,8 @@ function AppRouter() {
             <Route index element={<Home />} />
             <Route path="/search" element={<Search />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/:userId" element={<UserProfile />}>
               <Route index element={<Profile />} />

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { UserData } from "../../context/UserContext";
+import { UserData } from "../../contexts/UserContext";
 import axios from "axios";
 import { LoadingAnimation } from "../Loading";
 import Message from "./message";
