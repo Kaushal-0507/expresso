@@ -17,7 +17,7 @@ export const getSinglePostService = (postId, token) => {
 };
 
 export const getUserPostsService = (userId, token) => {
-  return axios.get(`${API_URL}/api/post/${userId}`, {
+  return axios.get(`${API_URL}/api/post/user/${userId}`, {
     headers: {
       authorization: `Bearer ${token}`,
     },
