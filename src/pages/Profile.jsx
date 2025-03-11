@@ -194,8 +194,10 @@ export default function Profile() {
   }, [userId, userDetails]);
 
   useEffect(() => {
-    getAllUserPosts(userProfile?._id);
-  }, [userProfile, posts]);
+    if (userProfile?._id) {
+      getAllUserPosts(userProfile._id);
+    }
+  }, [userProfile?._id, posts]);
 
   return (
     <section className="py-2">

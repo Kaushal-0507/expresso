@@ -68,10 +68,10 @@ export default function NavBar() {
       <NavLink style={activeStyle} to="/chat">
         <FontAwesomeIcon icon={faMessage} />
       </NavLink>
-      <NavLink style={activeStyle} to="/notifications" className="relative">
+      <NavLink style={activeStyle} to="/notifications" className="relative flex items-center">
         <FontAwesomeIcon icon={faBell} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+          <span className="ml-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
             {unreadCount}
           </span>
         )}
@@ -153,15 +153,17 @@ export function SideNavBar() {
       <NavLink
         style={activeStyle}
         to="/notifications"
-        className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40 relative"
+        className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40"
       >
-        <FontAwesomeIcon icon={faBell} className="w-[20px]" />
+        <div className="flex items-center">
+          <FontAwesomeIcon icon={faBell} className="w-[20px]" />
+          {unreadCount > 0 && (
+            <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </div>
         <p className="max-[768px]:hidden">Notifications</p>
-        {unreadCount > 0 && (
-          <span className="absolute right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
       </NavLink>
       <NavLink
         style={activeStyle}
