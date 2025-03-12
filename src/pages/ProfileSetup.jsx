@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthProvider";
-import { useState } from "react";
 import { avatarImgs } from "../common/avatarImgs";
 import Avatar from "../components/Avatar";
 import Button from "../components/Button";
@@ -38,45 +37,131 @@ export default function ProfileSetup() {
       ? null
       : URL.createObjectURL(userInfo?.profileImg);
 
+  const editProfileHandler = async (userData, token) => {
+    try {
+      let dataToUpdate = { ...userData };
+      
+      // Handle profile image upload if it's a file
+      if (typeof userData.profileImg === "object") {
+        try {
+          const response = await uploadMedia(userData.profileImg);
+          dataToUpdate.profileImg = response.secure_url;
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error("Failed to upload image. Please try again.");
+          return;
+        }
+      }
+      
+      // Make the API call to update user data
+      try {
+        const { data, status } = await editUserDataService(dataToUpdate, token);
+        
+        if (status === 201) {
+          console.log("Profile updated successfully:", data);
+          authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
+          toast.success("Profile updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error in profile update:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  // Update userInfo when userDetails changes
+  useEffect(() => {
+    if (userDetails) {
+      setUserInfo(prev => ({
+        ...prev,
+        profileImg: userDetails.profileImg || prev.profileImg,
+        bio: userDetails.bio || prev.bio,
+        portfolio: userDetails.portfolio || prev.portfolio
+      }));
+    }
+  }, [userDetails]);
+
+  const handleAvatarSelection = async (avatarUrl) => {
+    try {
+      // Create the data to update first
+      const dataToUpdate = {
+        profileBg: userInfo.profileBg,
+        profileImg: avatarUrl,
+        bio: userInfo.bio,
+        portfolio: userInfo.portfolio
+      };
+
+      // Make the API call
+      const { data, status } = await editUserDataService(dataToUpdate, token);
+      
+      if (status === 201) {
+        // Update local state after successful API call
+        setUserInfo(prev => ({
+          ...prev,
+          profileImg: avatarUrl
+        }));
+        authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
+        toast.success("Avatar updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      if (error.response) {
+        console.log("Error response:", error.response.data);
+      }
+      toast.error("Failed to update avatar. Please try again.");
+    }
+  };
+
   const imageUploadHandler = (property) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
-      if (file.type.split("/")[0] === "image" && file.size > 1024000) {
-        toast.error("The image size should not be more than 1mb.");
+      if (!file) return;
+
+      if (file.size > 1024000) {
+        toast.error("The image size should not be more than 1MB.");
         return;
       }
-      setUserInfo((prev) => ({ ...prev, [property]: file }));
+
+      try {
+        // Upload the file first
+        const response = await uploadMedia(file);
+        const imageUrl = response.secure_url;
+        
+        // Create data to update
+        const dataToUpdate = {
+          profileBg: userInfo.profileBg,
+          profileImg: imageUrl,
+          bio: userInfo.bio,
+          portfolio: userInfo.portfolio
+        };
+
+        // Make the API call
+        const { data, status } = await editUserDataService(dataToUpdate, token);
+        
+        if (status === 201) {
+          // Update local state after successful API call
+          setUserInfo(prev => ({
+            ...prev,
+            [property]: imageUrl
+          }));
+          authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
+          toast.success("Profile picture updated successfully!");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        if (error.response) {
+          console.log("Error response:", error.response.data);
+        }
+        toast.error("Failed to upload image. Please try again.");
+      }
     };
     input.click();
-  };
-
-  const editProfileHandler = async (userData, token) => {
-    if (typeof userData.profileImg === "object") {
-      try {
-        const response = await uploadMedia(userData.profileImg);
-        const { data, status } = await editUserDataService(
-          { ...userData, profileImg: response.url },
-          token
-        );
-        if (status === 201) {
-          authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    } else {
-      try {
-        const { data, status } = await editUserDataService(userData, token);
-        if (status === 201) {
-          authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
   };
 
   return (
@@ -114,7 +199,7 @@ export default function ProfileSetup() {
                     key={el.name}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setUserInfo((prev) => ({ ...prev, profileImg: el.url }));
+                      handleAvatarSelection(el.url);
                     }}
                   >
                     <Avatar

@@ -8,9 +8,8 @@ export const authReducer = (state, { type, payload }) => {
         user: {
           userDetails: {
             ...payload.createdUser,
-            profileBg: "https://i.redd.it/gocxo6n16m871.png",
-            profileImg:
-              "	https://tse2.mm.bing.net/th?id=OIP.r-l3mhddNzm7351sOrTNjgHaHa&pid=Api&P=0&h=180",
+            profileBg: payload.createdUser.profileBg || "https://i.redd.it/gocxo6n16m871.png",
+            profileImg: payload.createdUser.profileImg || "https://tse2.mm.bing.net/th?id=OIP.r-l3mhddNzm7351sOrTNjgHaHa&pid=Api&P=0&h=180",
           },
           token: payload.encodedToken,
         },

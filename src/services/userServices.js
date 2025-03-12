@@ -19,9 +19,10 @@ export const getSingleUserService = (userId, token) => {
 
 // /api/users/edit
 export const editUserDataService = (userData, token) => {
-  return axios.post(
-    `${API_URL}/api/user/edit`,
-    { userData },
+  console.log("Sending user data update:", userData);
+  return axios.put(
+    `${API_URL}/api/user/${userData._id || "me"}`,
+    userData,
     {
       headers: {
         authorization: `Bearer ${token}`,
