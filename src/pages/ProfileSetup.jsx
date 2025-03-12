@@ -123,11 +123,7 @@ export default function ProfileSetup() {
       const file = e.target.files[0];
       if (!file) return;
 
-      if (file.size > 1024000) {
-        toast.error("The image size should not be more than 1MB.");
-        return;
-      }
-
+      const id = toast.loading("Uploading image...");
       try {
         // Upload the file first
         const response = await uploadMedia(file);
@@ -151,14 +147,21 @@ export default function ProfileSetup() {
             [property]: imageUrl
           }));
           authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
-          toast.success("Profile picture updated successfully!");
+          toast.update(id, {
+            render: "Profile picture updated successfully!",
+            type: "success",
+            isLoading: false,
+            autoClose: 2000,
+          });
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        if (error.response) {
-          console.log("Error response:", error.response.data);
-        }
-        toast.error("Failed to upload image. Please try again.");
+        toast.update(id, {
+          render: error.message || "Failed to upload image. Please try again.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     };
     input.click();

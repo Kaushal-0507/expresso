@@ -5,16 +5,21 @@ export const CLOUDINARY_URL =
 const CLOUDINARY_UPLOAD_PRESET = "expresso";
 
 export const uploadMedia = async (media) => {
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
-
-  // Validate file type and size
-  if (!ALLOWED_TYPES.includes(media.type)) {
-    throw new Error("Unsupported file type");
+  // Check if media is null or undefined
+  if (!media) {
+    throw new Error("No file selected");
   }
 
-  if (media.size > MAX_FILE_SIZE) {
-    throw new Error("File size exceeds the limit");
+  // Check if media has type property
+  if (!media.type) {
+    throw new Error("Invalid file format");
+  }
+
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
+
+  // Validate file type
+  if (!ALLOWED_TYPES.includes(media.type)) {
+    throw new Error("Unsupported file type. Please use JPG, PNG, GIF or MP4 files.");
   }
 
   const formData = new FormData();
@@ -27,10 +32,19 @@ export const uploadMedia = async (media) => {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
+      timeout: 60000, // Increase timeout to 60 seconds for larger files
     });
     return response.data;
   } catch (error) {
     console.error("Error uploading media:", error);
-    throw error;
+    if (error.response?.data?.error?.message) {
+      throw new Error(error.response.data.error.message);
+    } else if (error.code === 'ECONNABORTED') {
+      throw new Error("Upload timed out. Please try with a smaller file or check your connection.");
+    } else {
+      throw new Error("Failed to upload image. Please try again.");
+    }
   }
 };

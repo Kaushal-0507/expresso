@@ -39,10 +39,14 @@ export default function EditProfile({ setOpen: setEditProfieOpen }) {
     input.accept = "image/*";
     input.onchange = (e) => {
       const file = e.target.files[0];
-      if (file.type.split("/")[0] === "image" && file.size > 1024000) {
-        toast.error("The image size should not be more than 1mb.");
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file");
         return;
       }
+      
       setUserInfo((prev) => ({ ...prev, [property]: file }));
     };
     input.click();
@@ -56,14 +60,37 @@ export default function EditProfile({ setOpen: setEditProfieOpen }) {
     ) {
       try {
         let newData = { ...userData };
-        if (typeof userData.profileBg === "object") {
-          const response = await uploadMedia(userData.profileBg);
-          newData.profileBg = response.url;
+        if (typeof userData.profileBg === "object" && userData.profileBg !== null) {
+          try {
+            const response = await uploadMedia(userData.profileBg);
+            newData.profileBg = response.secure_url || response.url;
+          } catch (error) {
+            console.error("Background upload error:", error);
+            toast.update(id, {
+              render: error.message || "Failed to upload background image",
+              type: "error",
+              isLoading: false,
+              autoClose: 3000,
+            });
+            return;
+          }
         }
-        if (typeof userData.profileImg === "object") {
-          const response = await uploadMedia(userData.profileImg);
-          newData.profileImg = response.url;
+        if (typeof userData.profileImg === "object" && userData.profileImg !== null) {
+          try {
+            const response = await uploadMedia(userData.profileImg);
+            newData.profileImg = response.secure_url || response.url;
+          } catch (error) {
+            console.error("Profile image upload error:", error);
+            toast.update(id, {
+              render: error.message || "Failed to upload profile image",
+              type: "error",
+              isLoading: false,
+              autoClose: 3000,
+            });
+            return;
+          }
         }
+        
         const { data, status } = await editUserDataService(newData, token);
         if (status === 201) {
           authDispatch({ type: AUTH.UPDATE_USER, payload: data.user });
@@ -76,12 +103,12 @@ export default function EditProfile({ setOpen: setEditProfieOpen }) {
           });
         }
       } catch (error) {
-        console.error(error);
+        console.error("Profile update error:", error);
         toast.update(id, {
-          render: "Update profile request failed!",
+          render: error.response?.data?.message || "Update profile request failed!",
           type: "error",
           isLoading: false,
-          autoClose: 2000,
+          autoClose: 3000,
         });
       }
     } else {
@@ -98,12 +125,12 @@ export default function EditProfile({ setOpen: setEditProfieOpen }) {
           });
         }
       } catch (error) {
-        console.error(error);
+        console.error("Profile update error:", error);
         toast.update(id, {
-          render: "Update profile request failed!",
+          render: error.response?.data?.message || "Update profile request failed!",
           type: "error",
           isLoading: false,
-          autoClose: 2000,
+          autoClose: 3000,
         });
       }
     }
@@ -230,10 +257,14 @@ export function EditProfileImage({ userInfo, setUserInfo, setOpen }) {
     input.accept = "image/*";
     input.onchange = (e) => {
       const file = e.target.files[0];
-      if (file.type.split("/")[0] === "image" && file.size > 1024000) {
-        toast.error("The image size should not be more than 1mb.");
+      if (!file) return;
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file");
         return;
       }
+      
       setUserInfo((prev) => ({ ...prev, [property]: file }));
     };
     input.click();
