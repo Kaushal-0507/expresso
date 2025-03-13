@@ -19,7 +19,10 @@ export const authReducer = (state, { type, payload }) => {
       return {
         ...state,
         user: {
-          userDetails: payload.foundUser,
+          userDetails: {
+            ...payload.foundUser,
+            profileImg: payload.foundUser.profileImg || "https://tse2.mm.bing.net/th?id=OIP.r-l3mhddNzm7351sOrTNjgHaHa&pid=Api&P=0&h=180",
+          },
           token: payload.encodedToken,
         },
         isLoggedIn: true,

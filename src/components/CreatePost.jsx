@@ -132,7 +132,7 @@ export default function CreatePost({ modal, setOpen }) {
     <section className="flex w-full gap-2 rounded-md border border-mineShaftLight p-4">
       <Avatar
         onClick={() => navigate(`/${userDetails?._id}`)}
-        profileUrl={userDetails?.profileImg}
+        profileUrl={userDetails?.profileImg || "https://tse2.mm.bing.net/th?id=OIP.r-l3mhddNzm7351sOrTNjgHaHa&pid=Api&P=0&h=180"}
       />
       <section className="flex w-full flex-col gap-2">
         <div>
