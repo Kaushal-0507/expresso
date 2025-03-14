@@ -1,39 +1,47 @@
 export const formatPostDate = (date) => {
-  let postDate = new Date(date);
-  let now = new Date();
-  let sec = Math.floor((now - postDate) / 1000);
-  if (sec > 59) {
-    const min = Math.floor(sec / 60);
-    if (min > 59) {
-      const hrs = Math.floor(min / 60);
-      if (hrs > 23) {
-        const days = Math.floor(min / 24);
-        if (days > 7) {
-          const weeks = Math.floor(days / 7);
-          if (days > 30) {
-            const months = Math.floor(days / 30);
-            if (months > 11) {
-              return postDate.toLocaleDateString("en-us", {
-                day: "numeric",
-                year: "numeric",
-                month: "short",
-              });
-            } else {
-              return `${months}mo ago`;
-            }
-          } else {
-            return `${weeks}w ago`;
-          }
-        } else {
-          return `${days}d ago`;
-        }
-      } else {
-        return `${hrs}hrs ago`;
-      }
-    } else {
-      return `${min}min ago`;
-    }
-  } else {
-    return `few seconds ago`;
+  const postDate = new Date(date);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - postDate) / 1000);
+  
+  // Less than a minute
+  if (diffInSeconds < 60) {
+    return 'few seconds ago';
   }
+  
+  // Less than an hour
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}min ago`;
+  }
+  
+  // Less than a day
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+  
+  // Less than a week
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  }
+  
+  // Less than a month
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInDays < 30) {
+    return `${diffInWeeks}w ago`;
+  }
+  
+  // Less than a year
+  const diffInMonths = Math.floor(diffInDays / 30.44); // Using average month length
+  if (diffInDays < 365) {
+    return `${diffInMonths}mo ago`;
+  }
+  
+  // More than a year
+  return postDate.toLocaleDateString("en-us", {
+    day: "numeric",
+    year: "numeric",
+    month: "short",
+  });
 };
