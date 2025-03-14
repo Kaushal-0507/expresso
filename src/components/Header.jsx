@@ -2,20 +2,23 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import { useAuth } from "../contexts/AuthProvider";
 import EXPRESSO from "../assets/EXPRESSO.webp";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeProvider";
-import { faSun } from "@fortawesome/free-solid-svg-icons";
+import { faSun, faMoon, faChartBar } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMoon } from "@fortawesome/free-solid-svg-icons";
 
 export default function Header() {
   const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
   const {
     userData: {
       user: { userDetails },
     },
   } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  // Check if the user is an admin
+  const isAdmin = userDetails?.role === "admin";
 
   return (
     <header
@@ -49,18 +52,31 @@ export default function Header() {
         </h1>
       </Link>
       <div className="w-4 min-[390px]:hidden"></div>
-      <button
-        onClick={(e) => {
-          toggleTheme();
-        }}
-        className="mr-2 flex cursor-pointer items-center justify-items-end gap-4 max-[390px]:hidden"
-      >
-        {theme === "dark" ? (
-          <FontAwesomeIcon icon={faSun} />
-        ) : (
-          <FontAwesomeIcon icon={faMoon} />
+      <div className="flex items-center gap-4">
+        {/* Reports Button (Visible only to Admin) */}
+        {isAdmin && (
+          <button
+            onClick={() => navigate("/report")}
+            className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-1 ${
+              theme === "dark" ? "hover:bg-mineShaftLight" : "hover:bg-gray-100"
+            }`}
+          >
+            <FontAwesomeIcon icon={faChartBar} />
+            <span className="text-sm">Reports</span>
+          </button>
         )}
-      </button>
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="flex cursor-pointer items-center justify-items-end gap-4 max-[390px]:hidden"
+        >
+          {theme === "dark" ? (
+            <FontAwesomeIcon icon={faSun} />
+          ) : (
+            <FontAwesomeIcon icon={faMoon} />
+          )}
+        </button>
+      </div>
       <Sidebar showMenu={showMenu} setShowMenu={setShowMenu} />
     </header>
   );

@@ -11,6 +11,13 @@ export default function Layout() {
   const { theme } = useTheme();
   const location = useLocation();
   const isInChatPage = location.pathname === "/chat";
+  const isInReportPage = location.pathname === "/report";
+
+  const getMainWidth = () => {
+    if (isInChatPage) return "max-w-[800px]";
+    if (isInReportPage) return "max-w-[1200px]";
+    return "max-w-[500px]";
+  };
 
   return (
     <section
@@ -28,13 +35,13 @@ export default function Layout() {
       <main
         className={`${
           theme === "dark" && "bg-mineShaftDark text-gray-300"
-        } mt-[50px] ${location.pathname === "/chat" ? "max-w-[800px]" : "max-w-[500px]"} flex-grow overflow-y-auto px-2 pb-[50px]`}
+        } mt-[50px] ${getMainWidth()} flex-grow overflow-y-auto px-2 pb-[50px]`}
       >
         <Outlet />
       </main>
       <section className="mt-[40px] border-l border-mineShaftLight pt-2 max-[600px]:hidden">
-        {!isInChatPage && <DesktopSearch />}
-        {!isInChatPage && <FollowSuggestions />}
+        {!isInChatPage && !isInReportPage && <DesktopSearch />}
+        {!isInChatPage && !isInReportPage && <FollowSuggestions />}
       </section>
     </section>
   );

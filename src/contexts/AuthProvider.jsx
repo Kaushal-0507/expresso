@@ -1,6 +1,10 @@
 import { useContext, useEffect } from "react";
 import { createContext } from "react";
-import { loginService, signUpService, checkAuthService } from "../services/authServices";
+import {
+  loginService,
+  signUpService,
+  checkAuthService,
+} from "../services/authServices";
 import { useReducer } from "react";
 import { authReducer } from "../reducers/authReducer";
 import { AUTH } from "../common/reducerTypes";

@@ -24,8 +24,12 @@ import { Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import Notifications from "./pages/Notifications";
 import Chat from "./pages/Chat";
+import ReportPage from "./components/ReportsPage";
 
 function AppRouter() {
+  const { userData } = useAuth();
+  const isAdmin = userData?.user?.role === "admin";
+
   const router = createBrowserRouter(
     createRoutesFromElements(
       <>
@@ -37,6 +41,7 @@ function AppRouter() {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
+            <Route path="/report" element={<ReportPage />} />
             <Route path="/:userId" element={<UserProfile />}>
               <Route index element={<Profile />} />
               <Route path="/:userId/following" element={<UserFollowing />} />

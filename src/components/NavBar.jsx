@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
 import { faMessage, faBell } from "@fortawesome/free-regular-svg-icons";
 import { faBookmark } from "@fortawesome/free-regular-svg-icons";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { faCompass } from "@fortawesome/free-regular-svg-icons";
 import { faHouse } from "@fortawesome/free-solid-svg-icons";
 import { faUser } from "@fortawesome/free-regular-svg-icons";
@@ -19,6 +19,8 @@ export default function NavBar() {
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
+  const isInReportPage = location.pathname === "/report";
 
   const activeStyle = ({ isActive }) => {
     return { color: isActive ? "blue" : "black" };
@@ -48,9 +50,11 @@ export default function NavBar() {
       <NavLink style={activeStyle} to="/">
         <FontAwesomeIcon icon={faHouse} />
       </NavLink>
-      <NavLink style={activeStyle} to="/search">
-        <FontAwesomeIcon icon={faMagnifyingGlass} />
-      </NavLink>
+      {!isInReportPage && (
+        <NavLink style={activeStyle} to="/search">
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
+        </NavLink>
+      )}
       <Modal
         className={`${theme === "dark" ? "bg-mineShaft text-white" : ""}`}
         open={open}
@@ -98,6 +102,8 @@ export function SideNavBar() {
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const location = useLocation();
+  const isInReportPage = location.pathname === "/report";
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -173,14 +179,16 @@ export function SideNavBar() {
         <FontAwesomeIcon icon={faBookmark} className="w-[20px]" />
         <p className="max-[768px]:hidden">Bookmarks</p>
       </NavLink>
-      <NavLink
-        style={activeStyle}
-        to="/search"
-        className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40 min-[600px]:hidden sm:hidden"
-      >
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="w-[20px]" />
-        <p className="max-[768px]:hidden">Search</p>
-      </NavLink>
+      {!isInReportPage && (
+        <NavLink
+          style={activeStyle}
+          to="/search"
+          className="flex w-full items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40 min-[600px]:hidden sm:hidden"
+        >
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="w-[20px]" />
+          <p className="max-[768px]:hidden">Search</p>
+        </NavLink>
+      )}
       <div
         className="flex w-full cursor-pointer items-center gap-2 rounded-full px-2 py-1 hover:bg-mineShaftLighter/40"
         onClick={signOut}
