@@ -31,18 +31,24 @@ export default function Chat() {
 
   // Filter users who mutually follow each other
   const mutualFollowers = users?.filter((user) => {
-    const isCurrentUserFollowingThem = userDetails?.followings?.includes(user._id);
-    const areTheyFollowingCurrentUser = user.followings?.includes(userDetails?._id);
-    
+    const isCurrentUserFollowingThem = userDetails?.followings?.includes(
+      user._id
+    );
+    const areTheyFollowingCurrentUser = user.followings?.includes(
+      userDetails?._id
+    );
+
     console.log(`Checking user ${user.username}:`, {
       userId: user._id,
       isCurrentUserFollowingThem,
-      areTheyFollowingCurrentUser
+      areTheyFollowingCurrentUser,
     });
-    
-    return user._id !== userDetails?._id && // Not the current user
-           isCurrentUserFollowingThem && // Current user follows them
-           areTheyFollowingCurrentUser; // They follow current user
+
+    return (
+      user._id !== userDetails?._id && // Not the current user
+      isCurrentUserFollowingThem && // Current user follows them
+      areTheyFollowingCurrentUser
+    ); // They follow current user
   });
 
   console.log("Mutual followers:", mutualFollowers);
@@ -69,7 +75,7 @@ export default function Chat() {
       auth: {
         token: `Bearer ${token}`, // Add Bearer prefix
       },
-      transports: ['websocket'],
+      transports: ["websocket"],
       withCredentials: true,
     });
 
@@ -83,7 +89,7 @@ export default function Chat() {
       console.error("Socket connection error details:", {
         message: error.message,
         description: error.description,
-        data: error.data
+        data: error.data,
       });
       if (error.message === "Authentication error") {
         toast.error("Chat authentication failed. Please try logging in again.");
@@ -107,14 +113,16 @@ export default function Chat() {
       console.log("Received new message:", message);
       setMessages((prevMessages) => {
         // Check if message already exists to prevent duplicates
-        const messageExists = prevMessages.some(msg => 
-          msg._id === message._id || 
-          (msg.sender === message.sender && 
-           msg.receiver === message.receiver && 
-           msg.content === message.content && 
-           Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) < 1000)
+        const messageExists = prevMessages.some(
+          (msg) =>
+            msg._id === message._id ||
+            (msg.sender === message.sender &&
+              msg.receiver === message.receiver &&
+              msg.content === message.content &&
+              Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) <
+                1000)
         );
-        
+
         if (messageExists) {
           return prevMessages;
         }
@@ -148,7 +156,7 @@ export default function Chat() {
     if (selectedUser && socket) {
       // Clear previous messages when changing users
       setMessages([]);
-      
+
       // Join the chat room and get history
       socket.emit("joinChat", selectedUser._id);
       socket.emit("getChatHistory", selectedUser._id);
@@ -173,8 +181,8 @@ export default function Chat() {
       };
 
       // Add message to state immediately
-      setMessages(prev => [...prev, messageData]);
-      
+      setMessages((prev) => [...prev, messageData]);
+
       // Send message to server
       socket.emit("sendMessage", messageData);
       setMessageInput("");
@@ -189,7 +197,7 @@ export default function Chat() {
       console.log("Received new message:", message);
       setMessages((prevMessages) => {
         // Only check for exact duplicate by ID
-        if (prevMessages.some(msg => msg._id === message._id)) {
+        if (prevMessages.some((msg) => msg._id === message._id)) {
           return prevMessages;
         }
         return [...prevMessages, message];
@@ -226,7 +234,7 @@ export default function Chat() {
       }`}
     >
       {/* Chat Area */}
-      <div className="flex-[2] flex flex-col">
+      <div className="flex flex-[2] flex-col">
         {selectedUser ? (
           <>
             {/* Chat Header */}
@@ -280,11 +288,16 @@ export default function Chat() {
                   >
                     <p>{message.content}</p>
                     <p className="mt-1 text-xs opacity-70">
-                      {message.timestamp ? new Date(message.timestamp).toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                      }) : 'Just now'}
+                      {message.timestamp
+                        ? new Date(message.timestamp).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            }
+                          )
+                        : "Just now"}
                     </p>
                   </div>
                 </div>

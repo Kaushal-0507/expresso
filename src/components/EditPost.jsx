@@ -35,18 +35,18 @@ export default function EditPost({ post, setOpen }) {
           token
         );
 
-          postsDispatch({
-            type: POSTS.INITIALISE,
-            payload: data.posts.reverse(),
-          });
-          setInputText("");
-          setMedia(null);
-          toast.update(id, {
-            render: "Post updated!",
-            type: "success",
-            isLoading: false,
-            autoClose: 2000,
-          });
+        postsDispatch({
+          type: POSTS.INITIALISE,
+          payload: data.posts.reverse(),
+        });
+        setInputText("");
+        setMedia(null);
+        toast.update(id, {
+          render: "Post updated!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } catch (error) {
         console.error(error);
         toast.update(id, {
@@ -63,17 +63,17 @@ export default function EditPost({ post, setOpen }) {
           postId,
           token
         );
-          postsDispatch({
-            type: POSTS.INITIALISE,
-            payload: data.posts.reverse(),
-          });
-          setInputText("");
-          toast.update(id, {
-            render: "Post updated!",
-            type: "success",
-            isLoading: false,
-            autoClose: 2000,
-          });
+        postsDispatch({
+          type: POSTS.INITIALISE,
+          payload: data.posts.reverse(),
+        });
+        setInputText("");
+        toast.update(id, {
+          render: "Post updated!",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } catch (error) {
         console.error(error);
         toast.update(id, {
