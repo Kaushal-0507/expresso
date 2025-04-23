@@ -105,34 +105,73 @@ export default function Chat() {
     // Handle chat history
     newSocket.on("chatHistory", (history) => {
       console.log("Received chat history:", history);
-      setMessages(history || []);
+      if (!history) {
+        console.warn("Received empty chat history");
+        setMessages([]);
+        return;
+      }
+
+      // Ensure all messages have valid timestamps and sender/receiver info
+      const validMessages = history.filter(msg => {
+        return msg && 
+               msg.content && 
+               msg.sender && 
+               msg.receiver && 
+               msg.timestamp;
+      }).map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp || new Date().toISOString()
+      }));
+
+      console.log("Processed messages:", validMessages.length);
+      setMessages(validMessages);
     });
 
     // Handle new messages
     newSocket.on("newMessage", (message) => {
       console.log("Received new message:", message);
+      if (!message || !message.content || !message.sender || !message.receiver) {
+        console.warn("Received invalid message:", message);
+        return;
+      }
+
       setMessages((prevMessages) => {
         // Check if message already exists to prevent duplicates
         const messageExists = prevMessages.some(
           (msg) =>
             msg._id === message._id ||
-            (msg.sender === message.sender &&
-              msg.receiver === message.receiver &&
+            (msg.sender._id === message.sender._id &&
+              msg.receiver._id === message.receiver._id &&
               msg.content === message.content &&
-              Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) <
-                1000)
+              Math.abs(new Date(msg.timestamp) - new Date(message.timestamp)) < 1000)
         );
 
         if (messageExists) {
           return prevMessages;
         }
-        return [...prevMessages, message];
+
+        // Ensure the new message has a valid timestamp
+        const newMessage = {
+          ...message,
+          timestamp: message.timestamp || new Date().toISOString()
+        };
+
+        return [...prevMessages, newMessage];
       });
     });
 
     // Handle errors
     newSocket.on("error", (error) => {
       console.error("Socket error:", error);
+      if (error.message === "Failed to fetch chat history") {
+        console.log("Attempting to retry fetching chat history...");
+        // Retry fetching chat history after a short delay
+        setTimeout(() => {
+          if (selectedUser) {
+            socket.emit("getChatHistory", selectedUser._id);
+          }
+        }, 1000);
+      }
       toast.error(error.message || "Chat error occurred");
     });
 
@@ -270,14 +309,14 @@ export default function Chat() {
                 <div
                   key={index}
                   className={`mb-4 flex ${
-                    message.sender === userDetails._id
+                    message.sender._id === userDetails._id
                       ? "justify-end"
                       : "justify-start"
                   }`}
                 >
                   <div
                     className={`max-w-[70%] rounded-lg p-3 ${
-                      message.sender === userDetails._id
+                      message.sender._id === userDetails._id
                         ? theme === "dark"
                           ? "bg-blue-600"
                           : "bg-blue-500 text-white"
