@@ -5,8 +5,13 @@ import { useTheme } from "../contexts/ThemeProvider";
 import io from "socket.io-client";
 import Avatar from "../components/Avatar";
 import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function Chat() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState("");
@@ -15,16 +20,119 @@ export default function Chat() {
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const messagesEndRef = useRef(null);
   const { theme } = useTheme();
+  const navigate = useNavigate();
 
   const {
     userData: {
       user: { userDetails, token },
     },
+    login,
+    logout,
   } = useAuth();
 
   const {
     usersData: { users },
   } = useUsers();
+
+  // Validate private chat token on component mount
+  useEffect(() => {
+    const validatePrivateChatToken = async () => {
+      // Always clear the token and show auth form on mount
+      localStorage.removeItem("privateChatToken");
+      setIsAuthenticated(false);
+      setEmail("");
+      setPassword("");
+    };
+
+    validatePrivateChatToken();
+  }, []);
+
+  // Clear private chat token and form fields when user logs out
+  useEffect(() => {
+    if (!token) {
+      localStorage.removeItem("privateChatToken");
+      setIsAuthenticated(false);
+      // Clear email and password fields when showing auth form
+      setEmail("");
+      setPassword("");
+    }
+  }, [token]);
+
+  // Clear form fields on socket authentication error
+  useEffect(() => {
+    if (socket) {
+      socket.on("connect_error", (error) => {
+        if (error.message === "Authentication error") {
+          localStorage.removeItem("privateChatToken");
+          setIsAuthenticated(false);
+          // Clear email and password fields when showing auth form
+          setEmail("");
+          setPassword("");
+          toast.error("Session expired. Please login again.");
+        }
+      });
+    }
+  }, [socket]);
+
+  const handlePrivateChatLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://localhost:7000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+
+      const data = await response.json();
+      console.log("Login response:", data); // Debug log
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Extract token from the response
+      const token = data.encodedToken;
+      
+      if (!token) {
+        console.error("Token not found in response:", data);
+        throw new Error("No token received from server");
+      }
+
+      // Store the private chat token in localStorage
+      localStorage.setItem("privateChatToken", token);
+      
+      // Validate the token immediately
+      const validateResponse = await fetch("http://localhost:7000/api/auth/validate-token", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        credentials: "include",
+      });
+
+      if (!validateResponse.ok) {
+        throw new Error("Token validation failed");
+      }
+
+      setIsAuthenticated(true);
+      toast.success("Private chat access granted");
+      
+      // Clear the form fields
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      console.error("Private chat login error:", error);
+      localStorage.removeItem("privateChatToken");
+      setIsAuthenticated(false);
+      toast.error(error.message || "Failed to access private chat");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   console.log("Current user details:", userDetails); // Debug log for current user
   console.log("All users:", users); // Debug log for all users
@@ -49,7 +157,7 @@ export default function Chat() {
       isCurrentUserFollowingThem && // Current user follows them
       areTheyFollowingCurrentUser
     ); // They follow current user
-  });
+  }) || []; // Add fallback for when users is undefined
 
   console.log("Mutual followers:", mutualFollowers);
 
@@ -65,15 +173,23 @@ export default function Chat() {
 
   // Socket connection effect
   useEffect(() => {
-    if (!token) {
-      console.log("No token available for socket connection");
+    if (!isAuthenticated) return;
+
+    const privateChatToken = localStorage.getItem("privateChatToken");
+    if (!privateChatToken) {
+      console.log("No private chat token available");
       return;
     }
 
-    console.log("Attempting socket connection with token:", token);
+    // Ensure token doesn't have 'Bearer ' prefix
+    const cleanToken = privateChatToken.startsWith("Bearer ") 
+      ? privateChatToken.substring(7) 
+      : privateChatToken;
+
+    console.log("Attempting socket connection with private chat token");
     const newSocket = io("http://localhost:7000", {
       auth: {
-        token: `Bearer ${token}`, // Add Bearer prefix
+        token: cleanToken,
       },
       transports: ["websocket"],
       withCredentials: true,
@@ -86,13 +202,14 @@ export default function Chat() {
 
     // Handle connection errors
     newSocket.on("connect_error", (error) => {
-      console.error("Socket connection error details:", {
-        message: error.message,
-        description: error.description,
-        data: error.data,
-      });
-      if (error.message === "Authentication error") {
-        toast.error("Chat authentication failed. Please try logging in again.");
+      console.error("Socket connection error details:", error);
+      if (error.message.includes("Authentication error")) {
+        // Clear invalid token and reset authentication
+        localStorage.removeItem("privateChatToken");
+        setIsAuthenticated(false);
+        setEmail("");
+        setPassword("");
+        toast.error("Session expired. Please login again.");
       }
     });
 
@@ -188,7 +305,7 @@ export default function Chat() {
         newSocket.disconnect();
       }
     };
-  }, [token]); // Add token as dependency
+  }, [isAuthenticated]); // Add isAuthenticated as dependency
 
   // Load chat history when selecting a user
   useEffect(() => {
@@ -208,6 +325,7 @@ export default function Chat() {
     }
   }, [messages]);
 
+  // Handle socket message sending
   const sendMessage = (e) => {
     e.preventDefault();
     if (messageInput.trim() && selectedUser && socket) {
@@ -219,11 +337,19 @@ export default function Chat() {
         timestamp: new Date().toISOString(),
       };
 
-      // Add message to state immediately
+      // Add message to state immediately for optimistic update
       setMessages((prev) => [...prev, messageData]);
 
       // Send message to server
-      socket.emit("sendMessage", messageData);
+      socket.emit("sendMessage", messageData, (error) => {
+        if (error) {
+          console.error("Error sending message:", error);
+          // Remove the optimistic update if the message failed to send
+          setMessages((prev) => prev.filter(msg => msg._id !== messageData._id));
+          toast.error(error.message || "Failed to send message");
+        }
+      });
+      
       setMessageInput("");
     }
   };
@@ -234,12 +360,45 @@ export default function Chat() {
 
     const handleNewMessage = (message) => {
       console.log("Received new message:", message);
+      if (!message || !message.content || !message.sender || !message.receiver) {
+        console.warn("Received invalid message:", message);
+        return;
+      }
+
+      // Ensure sender and receiver are properly populated
+      const processedMessage = {
+        ...message,
+        sender: {
+          _id: message.sender._id || message.sender,
+          username: message.sender.username,
+          firstName: message.sender.firstName,
+          lastName: message.sender.lastName
+        },
+        receiver: {
+          _id: message.receiver._id || message.receiver,
+          username: message.receiver.username,
+          firstName: message.receiver.firstName,
+          lastName: message.receiver.lastName
+        },
+        timestamp: message.timestamp || new Date().toISOString()
+      };
+
       setMessages((prevMessages) => {
-        // Only check for exact duplicate by ID
-        if (prevMessages.some((msg) => msg._id === message._id)) {
+        // Check if message already exists to prevent duplicates
+        const messageExists = prevMessages.some(
+          (msg) =>
+            msg._id === processedMessage._id ||
+            (msg.sender._id === processedMessage.sender._id &&
+              msg.receiver._id === processedMessage.receiver._id &&
+              msg.content === processedMessage.content &&
+              Math.abs(new Date(msg.timestamp) - new Date(processedMessage.timestamp)) < 1000)
+        );
+
+        if (messageExists) {
           return prevMessages;
         }
-        return [...prevMessages, message];
+
+        return [...prevMessages, processedMessage];
       });
     };
 
@@ -256,7 +415,30 @@ export default function Chat() {
 
     const handleChatHistory = (history) => {
       console.log("Received chat history:", history);
-      setMessages(history || []);
+      if (!Array.isArray(history)) {
+        console.warn("Invalid chat history format:", history);
+        return;
+      }
+
+      // Process each message in history to ensure proper structure
+      const processedHistory = history.map(message => ({
+        ...message,
+        sender: {
+          _id: message.sender._id || message.sender,
+          username: message.sender.username,
+          firstName: message.sender.firstName,
+          lastName: message.sender.lastName
+        },
+        receiver: {
+          _id: message.receiver._id || message.receiver,
+          username: message.receiver.username,
+          firstName: message.receiver.firstName,
+          lastName: message.receiver.lastName
+        },
+        timestamp: message.timestamp || new Date().toISOString()
+      }));
+
+      setMessages(processedHistory);
     };
 
     socket.on("chatHistory", handleChatHistory);
@@ -265,6 +447,118 @@ export default function Chat() {
       socket.off("chatHistory", handleChatHistory);
     };
   }, [socket]);
+
+  // Render messages
+  const renderMessages = () => {
+    return messages.map((message, index) => {
+      // Ensure we have the correct sender ID for comparison
+      const senderId = message.sender._id || message.sender;
+      const isCurrentUser = senderId === userDetails._id;
+      
+      return (
+        <div
+          key={index}
+          className={`mb-4 flex ${
+            isCurrentUser ? "justify-end" : "justify-start"
+          }`}
+        >
+          <div
+            className={`max-w-[70%] rounded-lg p-3 ${
+              isCurrentUser
+                ? theme === "dark"
+                  ? "bg-blue-600"
+                  : "bg-blue-500 text-white"
+                : theme === "dark"
+                ? "bg-mineShaft"
+                : "bg-gray-100"
+            }`}
+          >
+            <p>{message.content}</p>
+            <p className="mt-1 text-xs opacity-70">
+              {message.timestamp
+                ? new Date(message.timestamp).toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })
+                : "Just now"}
+            </p>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className={`flex h-screen items-center justify-center ${
+        theme === "dark" ? "bg-mineShaftDark" : "bg-gray-50"
+      }`}>
+        <div className={`w-full max-w-md p-8 rounded-lg shadow-lg ${
+          theme === "dark" ? "bg-mineShaft text-white" : "bg-white"
+        }`}>
+          <h2 className="text-2xl font-bold mb-6 text-center">Private Chat Access</h2>
+          <form 
+            onSubmit={handlePrivateChatLogin} 
+            className="space-y-4"
+            autoComplete="off"
+          >
+            <div>
+              <label htmlFor="private-chat-email" className="block text-sm font-medium mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                id="private-chat-email"
+                name="private-chat-email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="off"
+                className={`w-full p-2 rounded-lg border ${
+                  theme === "dark"
+                    ? "bg-mineShaftDark border-gray-700 text-white"
+                    : "bg-white border-gray-300"
+                }`}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div>
+              <label htmlFor="private-chat-password" className="block text-sm font-medium mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                id="private-chat-password"
+                name="private-chat-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+                className={`w-full p-2 rounded-lg border ${
+                  theme === "dark"
+                    ? "bg-mineShaftDark border-gray-700 text-white"
+                    : "bg-white border-gray-300"
+                }`}
+                placeholder="Enter your password"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-2 px-4 rounded-lg font-medium ${
+                theme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-500 text-white hover:bg-blue-600"
+              } disabled:opacity-50`}
+            >
+              {isLoading ? "Authenticating..." : "Access Private Chat"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -305,42 +599,7 @@ export default function Chat() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`mb-4 flex ${
-                    message.sender._id === userDetails._id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
-                      message.sender._id === userDetails._id
-                        ? theme === "dark"
-                          ? "bg-blue-600"
-                          : "bg-blue-500 text-white"
-                        : theme === "dark"
-                        ? "bg-mineShaft"
-                        : "bg-gray-100"
-                    }`}
-                  >
-                    <p>{message.content}</p>
-                    <p className="mt-1 text-xs opacity-70">
-                      {message.timestamp
-                        ? new Date(message.timestamp).toLocaleTimeString(
-                            "en-US",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: true,
-                            }
-                          )
-                        : "Just now"}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {renderMessages()}
               <div ref={messagesEndRef} />
             </div>
 
